@@ -1,4 +1,3 @@
-coffee-tamper
-=============
+# coffee-tamper
 
-CoffeeScript package manager
+Packing one JavaScript file from separate CoffeeScript files
