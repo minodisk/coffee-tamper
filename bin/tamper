@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+
+var CoffeeTamper, pkgFile, program, puts, readFileSync, resolve, version;
+
+resolve = require('path').resolve;
+
+readFileSync = require('fs').readFileSync;
+
+puts = require('util').puts;
+
+CoffeeTamper = require(resolve(__dirname, '../lib/CoffeeTamper'));
+
+program = require('commander');
+
+pkgFile = resolve(__dirname, '../package.json');
+
+version = JSON.parse(readFileSync(pkgFile, {
+  encoding: 'utf8'
+})).version;
+
+console.log(version);
