@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 
-var CoffeeTamper, pkgFile, program, puts, readFileSync, resolve, version;
+var CoffeeTamper, pkgFile, program, readFileSync, resolve, tamper, version;
 
 resolve = require('path').resolve;
 
 readFileSync = require('fs').readFileSync;
-
-puts = require('util').puts;
 
 CoffeeTamper = require(resolve(__dirname, '../lib/CoffeeTamper'));
 
@@ -18,4 +16,8 @@ version = JSON.parse(readFileSync(pkgFile, {
   encoding: 'utf8'
 })).version;
 
-console.log(version);
+program.version(version).option('-c, --config [file]', 'Set config file path [Tamperfile.coffee]', 'Tamperfile.coffee').parse(process.argv);
+
+tamper = new CoffeeTamper;
+
+tamper.run(program);

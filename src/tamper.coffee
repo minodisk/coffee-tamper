@@ -1,16 +1,15 @@
 { resolve } = require 'path'
 { readFileSync } = require 'fs'
-{ puts } = require 'util'
 CoffeeTamper = require resolve __dirname, '../lib/CoffeeTamper'
 program = require 'commander'
 
 pkgFile = resolve __dirname, '../package.json'
 { version } = JSON.parse readFileSync pkgFile, encoding: 'utf8'
 
-console.log version
+program
+.version version
+.option '-c, --config [file]', 'Set config file path [Tamperfile.coffee]', 'Tamperfile.coffee'
+.parse process.argv
 
-# commander
-# .version version
-
-# tamper = new CoffeeTamper
-# tamper.run
+tamper = new CoffeeTamper
+tamper.run program

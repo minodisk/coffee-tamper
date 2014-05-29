@@ -1,7 +1,8 @@
-{ readdirSync } = require 'fs'
+{ readdirSync, readFileSync, writeFileSync } = require 'fs'
 { inspect } = require 'util'
 { resolve, dirname, basename, extname, sep } = require 'path'
 { exec, spawn } = require 'child_process'
+{ compile } = require 'coffee-script'
 
 
 firstDirname = (filepath) ->
@@ -19,7 +20,6 @@ module.exports = (grunt) ->
       options:
         dirs: [
           'src/**/'
-          'lib/**/'
           'test/**/'
         ]
         livereload:
@@ -31,84 +31,72 @@ module.exports = (grunt) ->
               when 'tamper.coffee'
                 [
                   'coffee:bin'
-                  'concat'
-                  'clean:bin'
+                  'concat:bin'
                   'test'
-                  'clean:test'
                 ]
               when 'CoffeeTamper.coffee'
                 [
                   'coffee:lib'
                   'test'
-                  'clean:test'
                 ]
           when 'test'
             [
               'coffee:test'
               'test'
-              'clean:test'
             ]
 
     coffee:
       bin:
+        files:
+          'bin/tamper': 'src/tamper.coffee'
         options:
           bare: true
-        files  : [
-          expand: true
-          cwd   : 'src'
-          src   : [ 'tamper.coffee' ]
-          dest  : 'bin'
-          ext   : '.js'
-        ]
       lib:
-        files: [
-          expand: true
-          cwd   : 'src'
-          src   : [ 'CoffeeTamper.coffee' ]
-          dest  : 'lib'
-          ext   : '.js'
-        ]
+        files:
+          'lib/CoffeeTamper.js': 'src/CoffeeTamper.coffee'
       test:
-        files: [
-          expand: true
-          src   : [ 'test/*.coffee' ]
-          ext   : '.js'
-        ]
+        files:
+          'test/tamper-test.js': 'test/tamper-test.coffee'
+          'test/CoffeeTamper-test.js': 'test/CoffeeTamper-test.coffee'
 
     concat:
       bin:
         options:
           banner: '#!/usr/bin/env node\n\n'
-        src    : [ 'bin/tamper.js' ]
+        src    : [ 'bin/tamper' ]
         dest   : 'bin/tamper'
 
-    simplemocha:
-      options:
-        reporter: 'tap'
-      tests: [ 'test/*-test.js' ]
-
     clean:
-      bin: [ 'bin/*.js' ]
       test: [ 'test/*.js' ]
 
 
   grunt.loadNpmTasks 'grunt-este-watch'
-  grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-contrib-concat'
   grunt.loadNpmTasks 'grunt-contrib-clean'
   grunt.loadNpmTasks 'grunt-release'
 
-  grunt.registerTask 'test', ->
+  grunt.registerMultiTask 'coffee', ->
+    for dest, src of @data.files
+      cs = readFileSync src, encoding: 'utf8'
+      js = compile cs, @data.options
+      writeFileSync dest, js, encoding: 'utf8'
+
+  grunt.registerTask 'npmTest', ->
     done = @async()
     exec 'npm test', (err, stdout, stderr) ->
       grunt.log.write stdout
       grunt.log.write stderr
       done()
 
+  grunt.registerTask 'test', [
+    'coffee:test'
+    'npmTest'
+    'clean:test'
+  ]
+
   grunt.registerTask 'default', [
     'coffee'
     'concat'
     'test'
-    'clean'
     'esteWatch'
   ]
